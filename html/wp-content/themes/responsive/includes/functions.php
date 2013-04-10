@@ -71,21 +71,20 @@ if (!function_exists('responsive_setup')):
          * @see http://codex.wordpress.org/Function_Reference/register_nav_menus
          */	
         register_nav_menus(array(
-			'top-menu' => __('Top Menu', 'responsive'),
-	        'header-menu'  => __('Header Menu', 'responsive'),
+			'top-menu'         => __('Top Menu', 'responsive'),
+	        'header-menu'      => __('Header Menu', 'responsive'),
 	        'sub-header-menu'  => __('Sub-Header Menu', 'responsive'),
-			'footer-menu'  => __('Footer Menu', 'responsive')
+			'footer-menu'      => __('Footer Menu', 'responsive')
 		    )
 	    );
 
-        // WordPress 3.4+
 		if ( function_exists('get_custom_header')) {
 			
         add_theme_support('custom-background');
 		
 		} else {
 		
-		// Backward Compatibility
+		// < 3.4 Backward Compatibility
 		
 		/**
          * This feature allows users to use custom background for a theme.
@@ -96,7 +95,7 @@ if (!function_exists('responsive_setup')):
 		
 		}
 
-		// WordPress 3.4+
+		// WordPress 3.4 >
 		if (function_exists('get_custom_header')) {
 			
 		add_theme_support('custom-header', array (
@@ -114,8 +113,18 @@ if (!function_exists('responsive_setup')):
 	       'height'			        => 100,
 	        // Admin header style callback
 	       'admin-head-callback'	=> 'responsive_admin_header_style'));
+		   
+		// gets included in the admin header
+        function responsive_admin_header_style() {
+            ?><style type="text/css">
+                .appearance_page_custom-header #headimg {
+					background-repeat:no-repeat;
+					border:none;
+				}
+             </style><?php
+        }		  
 	   
-	   } else {
+	    } else {
 		   
         // Backward Compatibility
 		
@@ -150,7 +159,6 @@ if (!function_exists('responsive_setup')):
 
 endif;
 
-
 /**
  * Get our wp_nav_menu() fallback, wp_page_menu(), to show a home link.
  */
@@ -180,7 +188,7 @@ add_filter('wp_page_menu', 'responsive_wp_page_menu');
  * number of comments (count only comments, not 
  * trackbacks/pingbacks)
  *
- * Courtesy of Chip Bennett
+ * Adopted from Chip Bennett
  */
 function responsive_comment_count( $count ) {  
 	if ( ! is_admin() ) {
@@ -206,8 +214,8 @@ function responsive_comment_list_pings( $comment ) {
 <?php }
 
 /**
- * Sets the post excerpt length to 40 characters.
- * Next few lines are adopted from Coraline
+ * Sets the post excerpt length to 40 words.
+ * Adopted from Coraline
  */
 function responsive_excerpt_length($length) {
     return 40;
@@ -219,7 +227,7 @@ add_filter('excerpt_length', 'responsive_excerpt_length');
  * Returns a "Read more" link for excerpts
  */
 function responsive_read_more() {
-    return ' <a href="' . get_permalink() . '">' . __('<div class="read-more">Read more &#8250;</div><!-- end of .read-more -->', 'responsive') . '</a>';
+    return '<div class="read-more"><a href="' . get_permalink() . '">' . __('Read more &#8250;', 'responsive') . '</a></div><!-- end of .read-more -->';
 }
 
 /**
@@ -253,7 +261,6 @@ function responsive_remove_gallery_css($css) {
 
 add_filter('gallery_style', 'responsive_remove_gallery_css');
 
-
 /**
  * This function removes default styles set by WordPress recent comments widget.
  */
@@ -263,14 +270,47 @@ function responsive_remove_recent_comments_style() {
 }
 add_action( 'widgets_init', 'responsive_remove_recent_comments_style' );
 
+if ( ! function_exists( 'responsive_post_meta_data' ) ) :
+/**
+ * This function prints post meta data.
+ */
+function responsive_post_meta_data() {
+	printf( __( '<span class="%1$s">Posted on </span>%2$s<span class="%3$s"> by </span>%4$s', 'responsive' ),
+	'meta-prep meta-prep-author posted', 
+	sprintf( '<a href="%1$s" title="%2$s" rel="bookmark"><span class="timestamp">%3$s</span></a>',
+		get_permalink(),
+		esc_attr( get_the_time() ),
+		get_the_date()
+	),
+	'byline',
+	sprintf( '<span class="author vcard"><a class="url fn n" href="%1$s" title="%2$s">%3$s</a></span>',
+		get_author_posts_url( get_the_author_meta( 'ID' ) ),
+		sprintf( esc_attr__( 'View all posts by %s', 'responsive' ), get_the_author() ),
+		get_the_author()
+	    )
+	);
+}
+endif;
+
+/**
+ * This function removes WordPress generated category and tag atributes.
+ * For W3C validation purposes only.
+ * 
+ */
+function responsive_category_rel_removal ($output) {
+    $output = str_replace(' rel="category tag"', '', $output);
+    return $output;
+}
+
+add_filter('wp_list_categories', 'responsive_category_rel_removal');
+add_filter('the_category', 'responsive_category_rel_removal');
 
 /**
  * Breadcrumb Lists
  * Allows visitors to quickly navigate back to a previous section or the root page.
  *
- * Courtesy of Dimox
+ * Adopted from Dimox
  *
- * bbPress compatibility patch by Dan Smith
  */
 function responsive_breadcrumb_lists () {
   
@@ -372,9 +412,8 @@ function responsive_breadcrumb_lists () {
   }
 } 
 
-
     /**
-     * A safe way of adding javascripts to a WordPress generated page.
+     * A safe way of adding JavaScripts to a WordPress generated page.
      */
     if (!is_admin())
         add_action('wp_enqueue_scripts', 'responsive_js');
@@ -384,9 +423,9 @@ function responsive_breadcrumb_lists () {
         function responsive_js() {
 			// JS at the bottom for fast page loading. 
 			// except for Modernizr which enables HTML5 elements & feature detects.
-			wp_enqueue_script('modernizr', get_template_directory_uri() . '/js/responsive-modernizr.js', array('jquery'), '2.5.3', false);
-            wp_enqueue_script('responsive-scripts', get_template_directory_uri() . '/js/responsive-scripts.js', array('jquery'), '1.1.1', true);
-			wp_enqueue_script('responsive-plugins', get_template_directory_uri() . '/js/responsive-plugins.js', array('jquery'), '1.1.0', true);
+			wp_enqueue_script('modernizr', get_template_directory_uri() . '/js/responsive-modernizr.js', array('jquery'), '2.6.1', false);
+            wp_enqueue_script('responsive-scripts', get_template_directory_uri() . '/js/responsive-scripts.js', array('jquery'), '1.2.1', true);
+			wp_enqueue_script('responsive-plugins', get_template_directory_uri() . '/js/responsive-plugins.js', array('jquery'), '1.1.1', true);
         }
 
     }
@@ -401,19 +440,33 @@ function responsive_breadcrumb_lists () {
     }
 
     add_action( 'wp_enqueue_scripts', 'responsive_enqueue_comment_reply' );
-	
-    /**
-     * Where the post has no post title, but must still display a link to the single-page post view.
-     */
-    add_filter('the_title', 'responsive_title');
 
-    function responsive_title($title) {
-        if ($title == '') {
-            return __('Untitled','responsive');
-        } else {
-            return $title;
-        }
-    }
+    /**
+     * Theme Options Support and Information
+     */	
+    function responsive_theme_support () {
+    ?>
+    
+    <div id="info-box-wrapper" class="grid col-940">
+        <div class="info-box notice">
+            <a class="blue button" href="<?php echo esc_url(__('http://themeid.com/support/','responsive')); ?>" title="<?php esc_attr_e('Theme Support', 'responsive'); ?>" target="_blank">
+            <?php printf(__('Theme Support','responsive')); ?></a>
+            
+            <a class="gray button" href="<?php echo esc_url(__('http://themeid.com/themes/','responsive')); ?>" title="<?php esc_attr_e('More Themes', 'responsive'); ?>" target="_blank">
+            <?php printf(__('More Themes','responsive')); ?></a>
+            
+            <a class="gray button" href="<?php echo esc_url(__('http://themeid.com/showcase/','responsive')); ?>" title="<?php esc_attr_e('Showcase', 'responsive'); ?>" target="_blank">
+            <?php printf(__('Showcase','responsive')); ?></a>
+            
+            <a class="gold button" href="<?php echo esc_url(__('http://themeid.com/donate/','responsive')); ?>" title="<?php esc_attr_e('Donate Now', 'responsive'); ?>" target="_blank">
+            <?php printf(__('Donate Now','responsive')); ?></a>
+        </div>
+    </div>
+
+    <?php }
+ 
+    add_action('responsive_theme_options','responsive_theme_support');
+
 	 
     /**
      * WordPress Widgets start right here.
@@ -507,6 +560,26 @@ function responsive_breadcrumb_lists () {
             'before_title' => '<div class="widget-title">',
             'after_title' => '</div>',
             'before_widget' => '<div id="%1$s" class="widget-wrapper %2$s">',
+            'after_widget' => '</div>'
+        ));
+		
+        register_sidebar(array(
+            'name' => __('Colophon Widget', 'responsive'),
+            'description' => __('Area Ten - sidebar-colophon.php', 'responsive'),
+            'id' => 'colophon-widget',
+            'before_title' => '<div class="widget-title">',
+            'after_title' => '</div>',
+            'before_widget' => '<div id="%1$s" class="colophon-widget widget-wrapper %2$s">',
+            'after_widget' => '</div>'
+        ));
+		
+        register_sidebar(array(
+            'name' => __('Top Widget', 'responsive'),
+            'description' => __('Area Twelve - sidebar-top.php', 'responsive'),
+            'id' => 'top-widget',
+            'before_title' => '<div class="widget-title">',
+            'after_title' => '</div>',
+            'before_widget' => '<div id="%1$s" class="%2$s">',
             'after_widget' => '</div>'
         ));
     }

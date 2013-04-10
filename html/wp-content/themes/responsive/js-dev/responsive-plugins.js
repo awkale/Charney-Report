@@ -12,3 +12,8 @@ jQuery(document).ready(function(){
 // jQuery("#thing-with-videos").fitVids({ customSelector: "iframe[src^='http://example.com'], iframe[src^='http://example.org']"});
 // Selectors are comma separated, just like CSS
 // Note: This will be the quickest way to add your own custom vendor as well as test your player's compatibility with FitVids.
+// Responsive Menu (TinyNav.js)
+jQuery(".menu").tinyNav({
+    active: 'current_page_item', // Set the "active" class
+    header: false // Show header instead of the active item
+});
